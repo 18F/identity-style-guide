@@ -1,10 +1,15 @@
 # Login.gov Design System
 
-## Installation and usage
+This repository contains the code for the Login.gov Design System. The documentation in here includes resources for both how to install locally, but also in various development environments.
 
-See [the documentation](https://design.login.gov/) for installation and usage instructions.
+1. [Installation](#installation)
+1. [Testing](#testing)
+1. [Deploying documentation updates](#deploying-documentation-updates)
+1. [Publishing a release to `npm`](#publishing-a-release-to-npm)
+1. [Use with Rails](#use-with-rails)
+1. [Use as a JavaScript package](#use-as-a-javascript-package)
 
-## Configuring for development
+## Installation (Local)
 
 The following dependencies are required to build the documentation and assets within this repository:
 
@@ -22,9 +27,12 @@ In development, build the documentation site with assets, watch source files for
 
 ```
 npm start
+
 ```
 
-## Linting
+## Testing
+
+### Linting
 
 [Lint](https://en.wikipedia.org/wiki/Lint_(software)) JavaScript and Sass files in `src/` by running:
 
@@ -38,7 +46,7 @@ This project uses [Prettier](https://prettier.io/) to format code. When running 
 npm run lint -- --fix
 ```
 
-## Visual regression tests
+### Visual regression testing
 
 When a pull request is submitted, a visual regression test will be automatically run to check for any visual changes between the working copy of the branch and the live documentation site. These will be reported as the `ci/circleci: visual-regression` GitHub status check.
 
@@ -55,7 +63,7 @@ Documentation deploys are performed automatically upon merging to `main` by [Fed
 
 More information can be found in Federalist’s [How Builds Work](https://federalist-docs.18f.gov/pages/how-federalist-works/how-builds-work/).
 
-## Publishing a release to `npm`
+## Releases
 
 When you're ready to release a new version of the `identity-style-guide` package there are just a few steps to take.
 
@@ -81,3 +89,94 @@ Before starting, make sure that all changes intended for release should be merge
    - The release version should match the version just published to `npm` (for example, `v2.1.5`).
    - Use the version name as the release title.
    - Use the release notes to link to any important issues or pull requests that were addressed in the release. You may copy this from `CHANGELOG.md`.
+
+## Use with Rails
+
+ The SCSS files natively support `asset-path()` out-of-the-box for ease of use with the Rails Asset Pipeline. To use with Rails, configure Rails to look for assets in both `node_modules` and the identity-style-guide module:
+
+ ```ruby
+ # config/initializers/assets.rb
+
+ Rails.application.config.assets.paths << Rails.root.join('node_modules')
+ Rails.application.config.assets.paths << Rails.root.join('node_modules/identity-style-guide/dist/assets')
+ ```
+
+ Finally, import the styles into your main stylesheet:
+
+ ```scss
+ // app/assets/stylesheets/application.css.scss
+
+ $font-path: 'fonts';
+ $image-path: 'img';
+
+ @import 'identity-style-guide/dist/assets/scss/styles';
+ ```
+
+ If you're using Sprockets and precompiling assets you'll need to update your
+ Sprockets manifest to include the images and fonts for production:
+
+ ```js
+ // app/assets/config/manifest.js
+
+ //= link_tree ../../../node_modules/identity-style-guide/dist/assets/img
+ //= link_tree ../../../node_modules/identity-style-guide/dist/assets/fonts
+ ```
+
+ Unfortunately, this results in the assets being saved under paths that include
+ everything after the `node_modules` directory, so a helper method is useful in
+ cleaning up the views:
+
+ ```ruby
+ # app/helpers/assets_helper.rb
+
+ module AssetsHelper
+   def login_design_asset_path(path)
+     "identity-style-guide/dist/assets/#{path}"
+   end
+ end
+ ```
+
+ ```erb
+ # app/views/foo.html.erb
+
+ <%= image_tag login_design_asset_path('img/us_flag_small.png'), ... %>
+
+ # app/views/layouts/application.html.erb
+
+ <head>
+   ...
+   <%= favicon_link_tag identity_asset_path('img/favicons/favicon.ico') %>
+ </head>
+ ```
+
+ Finally, if you're using Webpacker you'll need to reference the JS files in the
+ default pack:
+
+ ```js
+ // app/javascript/packs/application.js
+
+ require("identity-style-guide/dist/assets/js/main")
+ ```
+
+## Use as a JavaScript package
+
+  If you're already using a JavaScript bundler in your project, you can import specific component implementations from the `identity-style-guide` package. Most modern bundlers that support dead-code elimination will automatically optimize the bundle size to include only the code necessary in your project.
+
+  ```js
+  import { accordion } from 'identity-style-guide';
+
+  accordion.on();
+  ```
+
+  Note that unlike the pre-built JavaScript assets found in the `dist/assets` directory, importing the package from NPM will not automatically initialize the components on the page or include polyfills necessary to support older browsers. You will have to call the `on()` method for each component you import.
+
+  If you need support for older browsers in your project, it's suggested you import polyfills shipped with the `uswds` package and import it before any components:
+
+  ```
+  npm install uswds
+  ```
+
+  ```js
+  import 'uswds/src/js/polyfills';
+  import { accordion } from 'identity-style-guide';
+  ```

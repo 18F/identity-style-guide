@@ -181,8 +181,7 @@ $theme-color-info-darker:      map-get($site-palette, 'site-darkest-teal');
 
 // Disabled colors
 $theme-color-disabled-family:  'grey';
-// TODO: Revert back to `map-get` once https://github.com/uswds/uswds/pull/3762 is released.
-$theme-color-disabled-light:   'gray-5'; // map-get($site-palette, 'site-lightest-grey');
+$theme-color-disabled-light:   map-get($site-palette, 'site-lightest-grey');
 $theme-color-disabled:         map-get($site-palette, 'site-disabled-grey');
 $theme-color-disabled-dark:    map-get($site-palette, 'site-darker-grey');
 
